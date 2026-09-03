@@ -2,15 +2,21 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 /**
  * Lançada quando o Bureau de Crédito não entrega um score utilizável.
  *
  * Cobre os três modos de falha da integração: indisponibilidade/timeout,
- * resposta HTTP de erro e payload sem a chave 'score'. O controller a
- * traduz em HTTP 503, mantendo a análise em 'pendente'.
+ * resposta HTTP de erro e payload sem a chave 'score'.
+ *
+ * O método render() é chamado pelo Laravel automaticamente, traduzindo a
+ * exceção em HTTP 503 com mensagem limpa — sem stack trace e sem 500
+ * inesperado. A análise permanece em 'pendente' e pode ser retentada.
  */
 class BureauIndisponivelException extends RuntimeException
 {
@@ -34,5 +40,18 @@ class BureauIndisponivelException extends RuntimeException
         return new self(
             "A resposta do Bureau de Crédito para o CPF {$cpf} não contém o score.",
         );
+    }
+
+    public function render(Request $request): ?JsonResponse
+    {
+        if (! $request->expectsJson()) {
+            return null;
+        }
+
+        return response()->json([
+            'message' => 'O Bureau de Crédito está indisponível no momento. '
+                .'Sua solicitação foi registrada e você pode tentar novamente em instantes.',
+            'erro' => 'bureau_indisponivel',
+        ], Response::HTTP_SERVICE_UNAVAILABLE);
     }
 }
