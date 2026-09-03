@@ -105,7 +105,7 @@
 
     {{-- Conteúdo --}}
     <main class="flex-1 min-w-0">
-        <div class="max-w-5xl px-6 py-10 lg:px-12 lg:py-14">
+        <div class="mx-auto max-w-5xl px-6 py-10 lg:px-12 lg:py-14">
 
             <header class="mb-10">
                 <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
