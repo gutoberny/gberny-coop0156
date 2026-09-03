@@ -7,6 +7,8 @@ use App\Http\Resources\AnaliseCreditoResource;
 use App\Models\AnaliseCredito;
 use App\Services\AnaliseCreditoService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -21,6 +23,27 @@ class AnaliseCreditoController extends Controller
     public function __construct(
         private readonly AnaliseCreditoService $service,
     ) {}
+
+    /**
+     * Lista paginada das análises, da mais recente para a mais antiga.
+     *
+     * GET /api/analise-credito
+     * GET /api/analise-credito?cliente_id=1
+     */
+    public function index(Request $request): AnonymousResourceCollection
+    {
+        $porPagina = min((int) $request->integer('per_page', 15), 100);
+
+        $analises = AnaliseCredito::query()
+            ->when(
+                $request->filled('cliente_id'),
+                fn ($query) => $query->where('cliente_id', $request->integer('cliente_id')),
+            )
+            ->latest('id')
+            ->paginate($porPagina);
+
+        return AnaliseCreditoResource::collection($analises);
+    }
 
     /**
      * Solicita uma nova análise de crédito.

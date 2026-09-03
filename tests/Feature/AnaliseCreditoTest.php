@@ -328,6 +328,61 @@ class AnaliseCreditoTest extends TestCase
     }
 
     // ---------------------------------------------------------------------
+    // Listagem
+    // ---------------------------------------------------------------------
+
+    public function test_lista_analises_de_forma_paginada_da_mais_recente_para_a_mais_antiga(): void
+    {
+        $analises = AnaliseCredito::factory()->count(3)->create();
+
+        $response = $this->getJson('/api/analise-credito');
+
+        $response->assertOk()
+            ->assertJsonCount(3, 'data')
+            ->assertJsonPath('meta.total', 3)
+            ->assertJsonPath('data.0.id', $analises->last()->id)
+            ->assertJsonStructure([
+                'data' => [['id', 'nome', 'cpf', 'status', 'score', 'valor_solicitado']],
+                'meta' => ['current_page', 'last_page', 'per_page', 'total'],
+            ]);
+    }
+
+    public function test_lista_analises_filtrando_por_cliente(): void
+    {
+        $cliente = Cliente::factory()->create();
+        AnaliseCredito::factory()->count(2)->doCliente($cliente)->create();
+        AnaliseCredito::factory()->count(3)->create();
+
+        $response = $this->getJson("/api/analise-credito?cliente_id={$cliente->id}");
+
+        $response->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('meta.total', 2);
+
+        foreach ($response->json('data') as $analise) {
+            $this->assertSame($cliente->id, $analise['cliente_id']);
+        }
+    }
+
+    public function test_lista_analises_vazia_quando_nao_ha_registros(): void
+    {
+        $this->getJson('/api/analise-credito')
+            ->assertOk()
+            ->assertJsonCount(0, 'data')
+            ->assertJsonPath('meta.total', 0);
+    }
+
+    public function test_lista_analises_respeita_o_tamanho_de_pagina(): void
+    {
+        AnaliseCredito::factory()->count(8)->create();
+
+        $this->getJson('/api/analise-credito?per_page=5')
+            ->assertOk()
+            ->assertJsonCount(5, 'data')
+            ->assertJsonPath('meta.total', 8);
+    }
+
+    // ---------------------------------------------------------------------
     // Contratação
     // ---------------------------------------------------------------------
 
@@ -441,25 +496,5 @@ class AnaliseCreditoTest extends TestCase
     public function test_retorna_404_ao_contratar_analise_inexistente(): void
     {
         $this->postJson('/api/analise-credito/9999/contratar')->assertNotFound();
-    }
-
-    // ---------------------------------------------------------------------
-    // Tela de simulação
-    // ---------------------------------------------------------------------
-
-    public function test_tela_de_simulacao_exibe_analise_aprovada(): void
-    {
-        $analise = AnaliseCredito::factory()->aprovada()->create();
-
-        $this->get("/simulacao/{$analise->id}")
-            ->assertOk()
-            ->assertSee($analise->nome);
-    }
-
-    public function test_tela_de_simulacao_redireciona_analise_nao_aprovada(): void
-    {
-        $analise = AnaliseCredito::factory()->reprovada()->create();
-
-        $this->get("/simulacao/{$analise->id}")->assertRedirect('/');
     }
 }

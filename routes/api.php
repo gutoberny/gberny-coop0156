@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 Route::apiResource('clientes', ClienteController::class);
 
 // --- Análise de Crédito ---
+Route::get('/analise-credito', [AnaliseCreditoController::class, 'index']);
 Route::post('/analise-credito', [AnaliseCreditoController::class, 'solicitar']);
 Route::post('/analise-credito/{id}/contratar', [AnaliseCreditoController::class, 'contratar']);
 
