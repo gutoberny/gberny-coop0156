@@ -12,6 +12,13 @@ class Cliente extends Model
     /** @use HasFactory<ClienteFactory> */
     use HasFactory;
 
+    /**
+     * Domínio dos e-mails gerados quando a análise cria o cliente sem
+     * que um endereço tenha sido informado. A interface usa isso para não
+     * apresentar um endereço sintético como se fosse real.
+     */
+    public const DOMINIO_EMAIL_PROVISORIO = 'nao-informado.coop0156.local';
+
     protected $fillable = [
         'nome',
         'cpf',

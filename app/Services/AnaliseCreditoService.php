@@ -127,6 +127,6 @@ class AnaliseCreditoService
      */
     private function emailProvisorio(string $cpf): string
     {
-        return "{$cpf}@nao-informado.coop0156.local";
+        return $cpf.'@'.Cliente::DOMINIO_EMAIL_PROVISORIO;
     }
 }
