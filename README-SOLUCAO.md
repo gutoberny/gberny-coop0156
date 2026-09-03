@@ -33,9 +33,16 @@ docker run --rm -u "$(id -u):$(id -g)" \
     laravelsail/php84-composer:latest \
     composer install --ignore-platform-reqs
 
+# 2. Ambiente. A chave é gerada ANTES de subir o Sail: o servidor roda com
+#    --no-reload (necessário para os workers), então não recarrega o .env.
 cp .env.example .env
+docker run --rm -u "$(id -u):$(id -g)" \
+    -v "$(pwd):/var/www/html" -w /var/www/html \
+    laravelsail/php84-composer:latest \
+    php artisan key:generate
+
+# 3. Subir e migrar
 ./vendor/bin/sail up -d
-./vendor/bin/sail artisan key:generate
 ./vendor/bin/sail artisan migrate
 
 # Acesse http://localhost
@@ -43,8 +50,12 @@ cp .env.example .env
 ./vendor/bin/sail artisan test
 ```
 
-> **Porta 80 ocupada?** Defina `APP_PORT=8000` e `APP_URL=http://localhost:8000` no `.env`.
-> Deixe `SCORE_BUREAU_API_URL` como está — ela é o endereço *interno* do container (veja abaixo).
+> **Porta 80 ocupada?** Defina `APP_PORT=8000` e `APP_URL=http://localhost:8000` no `.env`
+> **antes** do `sail up -d`. Deixe `SCORE_BUREAU_API_URL` como está — ela é o endereço
+> *interno* do container, independente da porta publicada no host (veja abaixo).
+>
+> **Alterou o `.env` com o Sail já rodando?** Rode `./vendor/bin/sail restart`. O
+> `--no-reload` troca o recarregamento automático pela concorrência que o mock exige.
 
 ### PHP local
 
@@ -123,7 +134,7 @@ Três problemas encontrados no material entregue, todos corrigidos:
 
 **2. A URL do Bureau é interna, não pública.** Como a aplicação chama a si mesma, `SCORE_BUREAU_API_URL` precisa ser o endereço de dentro do container. No Sail a aplicação escuta na porta 80 do container ainda que publicada em outra porta no host, então derivar essa URL do `APP_URL` quebra a consulta. O valor é explícito e documentado no `.env.example`.
 
-**3. O servidor de desenvolvimento travava na autochamada.** Como o mock é servido pela própria aplicação, ela precisa atender uma requisição aninhada — com um único worker o servidor bloqueia e a consulta estoura o timeout, fazendo todo cenário de sucesso retornar 503. O `artisan serve` só respeita `PHP_CLI_SERVER_WORKERS` junto de `--no-reload`, então o `compose.yaml` redefine `SUPERVISOR_PHP_COMMAND` com essa flag.
+**3. O servidor de desenvolvimento travava na autochamada.** Como o mock é servido pela própria aplicação, ela precisa atender uma requisição aninhada — com um único worker o servidor bloqueia e a consulta estoura o timeout, fazendo todo cenário de sucesso retornar 503. O `artisan serve` só respeita `PHP_CLI_SERVER_WORKERS` junto de `--no-reload`, então o `compose.yaml` redefine `SUPERVISOR_PHP_COMMAND` com essa flag. O custo é perder o recarregamento automático em mudanças no `.env` — por isso a chave da aplicação é gerada antes de subir o Sail, e alterações posteriores no `.env` pedem `sail restart`.
 
 **Bônus — imagem Docker do README.** O comando de instalação do README original usa `laravelsail/php83-composer`, que não consegue executar o Laravel 13 (o framework usa *property hooks* do PHP 8.4): `syntax error, unexpected token "{"` em `Request.php`. Use `laravelsail/php84-composer`.
 
