@@ -35,8 +35,13 @@ return [
         ],
     ],
 
+    /*
+     * Bureau de Crédito externo. No desafio ele é simulado pela rota interna
+     * GET /api/mock/bureau/{cpf}, então a URL base aponta para a própria
+     * aplicação — porta 80 no Sail, 8000 no `artisan serve`.
+     */
     'score_bureau' => [
-        'url' => env('SCORE_BUREAU_API_URL', 'http://localhost:8000/api/mock/score'),
+        'url' => env('SCORE_BUREAU_API_URL', 'http://localhost/api/mock/bureau'),
         'timeout' => (int) env('SCORE_BUREAU_TIMEOUT', 3),
     ],
 
