@@ -102,6 +102,35 @@ class ClienteTest extends TestCase
             ->assertJsonValidationErrors('renda_mensal');
     }
 
+    /**
+     * A interface é toda em português, então as mensagens de validação
+     * também precisam vir traduzidas — inclusive as regras padrão do
+     * framework, que sem lang/pt_BR sairiam em inglês.
+     */
+    public function test_mensagens_de_validacao_vem_em_portugues(): void
+    {
+        $response = $this->postJson('/api/clientes', $this->dadosValidos([
+            'renda_mensal' => -100,
+            'nome' => '',
+        ]));
+
+        $response->assertUnprocessable();
+
+        $this->assertSame(
+            'O campo nome é obrigatório.',
+            $response->json('errors.nome.0'),
+        );
+
+        $this->assertStringContainsString(
+            'renda mensal',
+            $response->json('errors.renda_mensal.0'),
+        );
+        $this->assertStringNotContainsString(
+            'field',
+            $response->json('errors.renda_mensal.0'),
+        );
+    }
+
     public function test_lista_clientes_de_forma_paginada(): void
     {
         Cliente::factory()->count(20)->create();
