@@ -65,7 +65,10 @@
                     <p class="text-xs text-slate-400">Desafio Análise de Crédito</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-4">
+                <a href="/clientes" class="text-sm text-slate-400 hover:text-emerald-400 font-medium transition-all">
+                    Clientes
+                </a>
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     Ambiente de Testes
                 </span>
@@ -85,28 +88,55 @@
                 Nova Solicitação de Crédito
             </h2>
             
-            <form id="form-analise" class="space-y-6">
+            <!-- Alerta geral (falhas de comunicação, Bureau indisponível, etc.) -->
+            <div id="alerta-erro" class="hidden bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6" role="alert" aria-live="assertive">
+                <div class="flex items-start gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <span class="text-red-400 text-xs block font-semibold uppercase tracking-wider mb-1">Não foi possível concluir</span>
+                        <p id="alerta-erro-mensagem" class="text-slate-200 text-sm"></p>
+                    </div>
+                </div>
+            </div>
+
+            <form id="form-analise" class="space-y-6" novalidate>
                 <!-- Nome Completo -->
                 <div>
                     <label for="nome" class="block text-sm font-medium text-slate-400 mb-2">Nome Completo</label>
                     <input type="text" id="nome" name="nome" required placeholder="Digite o nome completo do proponente"
                         class="w-full bg-slate-950/50 border border-panelBorder rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                    <p data-erro="nome" class="hidden text-xs text-red-400 mt-1.5"></p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- CPF -->
                     <div>
                         <label for="cpf" class="block text-sm font-medium text-slate-400 mb-2">CPF</label>
-                        <input type="text" id="cpf" name="cpf" required placeholder="000.000.000-00"
+                        <input type="text" id="cpf" name="cpf" required inputmode="numeric" maxlength="14" placeholder="000.000.000-00"
                             class="w-full bg-slate-950/50 border border-panelBorder rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                        <p data-erro="cpf" class="hidden text-xs text-red-400 mt-1.5"></p>
                     </div>
 
                     <!-- Renda Mensal -->
                     <div>
                         <label for="renda_mensal" class="block text-sm font-medium text-slate-400 mb-2">Renda Mensal (R$)</label>
-                        <input type="number" step="0.01" id="renda_mensal" name="renda_mensal" required placeholder="Ex: 3500.00"
+                        <input type="number" step="0.01" min="0" id="renda_mensal" name="renda_mensal" required placeholder="Ex: 3500.00"
                             class="w-full bg-slate-950/50 border border-panelBorder rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                        <p data-erro="renda_mensal" class="hidden text-xs text-red-400 mt-1.5"></p>
                     </div>
+                </div>
+
+                <!-- E-mail (opcional) -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-slate-400 mb-2">
+                        E-mail <span class="text-slate-500 font-normal">(opcional)</span>
+                    </label>
+                    <input type="email" id="email" name="email" placeholder="proponente@email.com"
+                        class="w-full bg-slate-950/50 border border-panelBorder rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                    <p data-erro="email" class="hidden text-xs text-red-400 mt-1.5"></p>
+                    <p class="text-xs text-slate-500 mt-1.5">Usado no cadastro do cliente. Se não informado, um endereço provisório é gerado a partir do CPF.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -120,13 +150,28 @@
                             <option value="imobiliario">Crédito Imobiliário</option>
                             <option value="automotivo">Crédito Automotivo</option>
                         </select>
+                        <p data-erro="tipo_credito" class="hidden text-xs text-red-400 mt-1.5"></p>
                     </div>
 
                     <!-- Valor Solicitado -->
                     <div>
                         <label for="valor_solicitado" class="block text-sm font-medium text-slate-400 mb-2">Valor Requerido (R$)</label>
-                        <input type="number" step="0.01" id="valor_solicitado" name="valor_solicitado" required placeholder="Ex: 15000.00"
+                        <input type="number" step="0.01" min="0.01" id="valor_solicitado" name="valor_solicitado" required placeholder="Ex: 15000.00"
                             class="w-full bg-slate-950/50 border border-panelBorder rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                        <p data-erro="valor_solicitado" class="hidden text-xs text-red-400 mt-1.5"></p>
+                    </div>
+                </div>
+
+                <!-- Prévia da simulação, calculada no cliente antes de enviar -->
+                <div id="previa-simulacao" class="hidden bg-slate-950/40 border border-panelBorder rounded-xl p-4">
+                    <span class="text-slate-500 text-xs block font-semibold uppercase tracking-wider mb-2">Prévia (sujeita à análise)</span>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-400">Parcela estimada (12x)</span>
+                        <span id="previa-parcela" class="font-medium text-slate-200">-</span>
+                    </div>
+                    <div class="flex justify-between text-sm mt-1.5">
+                        <span class="text-slate-400">Renda comprometida</span>
+                        <span id="previa-comprometimento" class="font-medium text-slate-200">-</span>
                     </div>
                 </div>
 
@@ -211,33 +256,15 @@
 
                 <!-- Ações para Contratação -->
                 <div id="container-contratacao" class="mt-8 pt-6 border-t border-panelBorder hidden">
-                    <button id="btn-contratar"
+                    <a id="btn-contratar" href="#"
                         class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform active:scale-98 shadow-lg shadow-indigo-500/10 flex items-center justify-center gap-2">
-                        <span id="txt-contratar">Confirmar Contratação do Crédito</span>
-                        <svg id="loading-spinner-contratar" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <span id="txt-contratar">Ver Simulação e Contratar</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
-                    </button>
-                    <p class="text-center text-xs text-slate-500 mt-3">Ao clicar, a simulação será enviada para a fila de processamento da contratação.</p>
+                    </a>
+                    <p class="text-center text-xs text-slate-500 mt-3">Revise as condições completas na tela de simulação antes de confirmar a contratação.</p>
                 </div>
-            </div>
-
-            <!-- Card de Contratação Sucesso/Processando -->
-            <div id="card-sucesso-contratacao" class="glass-panel rounded-3xl p-8 border-emerald-500/30 text-center shadow-2xl relative overflow-hidden hidden">
-                <div class="h-16 w-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-slate-100">Contratação Enviada!</h3>
-                <p class="text-sm text-slate-400 mt-2">A simulação de crédito foi encaminhada com sucesso para a nossa fila de processamento em segundo plano.</p>
-                <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 mt-4 text-xs text-emerald-400 font-mono">
-                    Status: PROCESSANDO_CONTRATACAO
-                </div>
-                <button onclick="window.location.reload()" class="mt-6 text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-all">
-                    Solicitar Nova Simulação &rarr;
-                </button>
             </div>
 
         </section>
@@ -251,25 +278,242 @@
         </div>
     </footer>
 
-    <!--
-      -- =========================================================================
-      -- INSTRUÇÕES DE IMPLEMENTAÇÃO JAVASCRIPT (DESAFIO PARA O CANDIDATO)
-      -- =========================================================================
-      -- O candidato deve escrever o JavaScript abaixo para integrar com as APIs.
-      -- Requisitos:
-      --   1. Tratar a submissão do formulário 'form-analise'.
-      --   2. Fazer requisição POST para '/api/analise-credito' com os dados do form.
-      --   3. Se REPROVADO: exibir o card de resultado com o motivo da recusa.
-      --   4. Se APROVADO: exibir o card de resultado e um botão/link que redirecione
-      --      o usuário para '/simulacao/{id}' para visualizar as condições antes de contratar.
-      -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // O candidato deve preencher a integração aqui.
+            const PARCELAS = 12;
+            const COMPROMETIMENTO_MAXIMO = 0.30;
 
-            const form = document.getElementById('form-analise');
+            const el = (id) => document.getElementById(id);
 
-            // TODO: Adicionar Event Listeners e requisições para a API Laravel.
+            const form = el('form-analise');
+            const btnSolicitar = el('btn-solicitar');
+            const txtSolicitar = el('txt-solicitar');
+            const spinner = el('loading-spinner');
+            const inputCpf = el('cpf');
+
+            const alerta = el('alerta-erro');
+            const alertaMensagem = el('alerta-erro-mensagem');
+
+            const cardVazio = el('resultado-vazio');
+            const cardResultado = el('resultado-analise');
+            const badge = el('status-indicator-badge');
+            const blocoAprovado = el('dados-aprovado');
+            const blocoReprovado = el('dados-reprovado');
+            const containerContratacao = el('container-contratacao');
+            const btnContratar = el('btn-contratar');
+
+            const previa = el('previa-simulacao');
+
+            const moeda = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+            });
+
+            const percentual = (fracao) =>
+                `${(fracao * 100).toLocaleString('pt-BR', {
+                    minimumFractionDigits: 1,
+                    maximumFractionDigits: 1,
+                })}%`;
+
+            // -------------------------------------------------------------
+            // Máscara de CPF — a API normaliza de todo modo, mas a máscara
+            // deixa claro o formato esperado.
+            // -------------------------------------------------------------
+            const mascararCpf = (valor) => {
+                const digitos = valor.replace(/\D/g, '').slice(0, 11);
+
+                return digitos
+                    .replace(/^(\d{3})(\d)/, '$1.$2')
+                    .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+                    .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+            };
+
+            inputCpf.addEventListener('input', (evento) => {
+                evento.target.value = mascararCpf(evento.target.value);
+            });
+
+            // -------------------------------------------------------------
+            // Feedback de erros
+            // -------------------------------------------------------------
+            const limparErros = () => {
+                alerta.classList.add('hidden');
+                alertaMensagem.textContent = '';
+
+                document.querySelectorAll('[data-erro]').forEach((campo) => {
+                    campo.classList.add('hidden');
+                    campo.textContent = '';
+                });
+
+                form.querySelectorAll('input, select').forEach((campo) => {
+                    campo.classList.remove('border-red-500/60');
+                });
+            };
+
+            const exibirAlerta = (mensagem) => {
+                alertaMensagem.textContent = mensagem;
+                alerta.classList.remove('hidden');
+                alerta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            };
+
+            const exibirErrosDeValidacao = (erros) => {
+                Object.entries(erros).forEach(([campo, mensagens]) => {
+                    const destino = document.querySelector(`[data-erro="${campo}"]`);
+                    const input = el(campo);
+
+                    if (destino) {
+                        destino.textContent = mensagens[0];
+                        destino.classList.remove('hidden');
+                    }
+
+                    if (input) {
+                        input.classList.add('border-red-500/60');
+                    }
+                });
+
+                exibirAlerta('Revise os campos destacados e tente novamente.');
+            };
+
+            // -------------------------------------------------------------
+            // Prévia da parcela, recalculada conforme o usuário digita
+            // -------------------------------------------------------------
+            const atualizarPrevia = () => {
+                const renda = parseFloat(el('renda_mensal').value);
+                const valor = parseFloat(el('valor_solicitado').value);
+
+                if (!Number.isFinite(renda) || !Number.isFinite(valor) || renda <= 0 || valor <= 0) {
+                    previa.classList.add('hidden');
+                    return;
+                }
+
+                // Taxa ainda desconhecida (depende do score); a prévia usa a
+                // taxa padrão de 4,5% como cenário conservador.
+                const parcela = (valor + valor * 0.045 * PARCELAS) / PARCELAS;
+                const comprometimento = parcela / renda;
+
+                el('previa-parcela').textContent = moeda.format(parcela);
+
+                const alvo = el('previa-comprometimento');
+                alvo.textContent = percentual(comprometimento);
+                alvo.classList.toggle('text-red-400', comprometimento > COMPROMETIMENTO_MAXIMO);
+                alvo.classList.toggle('text-slate-200', comprometimento <= COMPROMETIMENTO_MAXIMO);
+
+                previa.classList.remove('hidden');
+            };
+
+            ['renda_mensal', 'valor_solicitado'].forEach((campo) => {
+                el(campo).addEventListener('input', atualizarPrevia);
+            });
+
+            // -------------------------------------------------------------
+            // Exibição do resultado
+            // -------------------------------------------------------------
+            const badgeHtml = (aprovado) => {
+                const cor = aprovado
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    : 'bg-red-500/10 text-red-400 border-red-500/20';
+
+                return `<span class="${cor} border text-xs font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full">
+                    ${aprovado ? 'Aprovado' : 'Reprovado'}
+                </span>`;
+            };
+
+            const exibirResultado = (analise) => {
+                const aprovado = analise.status === 'aprovado';
+
+                el('res-nome').textContent = analise.nome;
+                el('res-cpf').textContent = mascararCpf(analise.cpf);
+                el('res-score').textContent = analise.score ?? 'Não informado';
+
+                const status = el('res-status');
+                status.textContent = aprovado ? 'Aprovado' : 'Reprovado';
+                status.className = `font-bold ${aprovado ? 'text-emerald-400' : 'text-red-400'}`;
+
+                badge.innerHTML = badgeHtml(aprovado);
+
+                blocoAprovado.classList.toggle('hidden', !aprovado);
+                blocoReprovado.classList.toggle('hidden', aprovado);
+                containerContratacao.classList.toggle('hidden', !aprovado);
+
+                if (aprovado) {
+                    el('res-taxa').textContent = `${analise.taxa_juros.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 1,
+                    })}% a.m.`;
+                    el('res-parcela').textContent = moeda.format(analise.valor_parcela);
+                    el('res-comprometimento').textContent = percentual(
+                        analise.valor_parcela / analise.renda_mensal,
+                    );
+
+                    btnContratar.href = analise.url_simulacao ?? `/simulacao/${analise.id}`;
+                } else {
+                    el('res-motivo').textContent = analise.motivo_rejeicao;
+                }
+
+                cardVazio.classList.add('hidden');
+                cardResultado.classList.remove('hidden');
+                cardResultado.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            };
+
+            // -------------------------------------------------------------
+            // Submissão
+            // -------------------------------------------------------------
+            const alternarCarregando = (carregando) => {
+                btnSolicitar.disabled = carregando;
+                btnSolicitar.classList.toggle('opacity-60', carregando);
+                btnSolicitar.classList.toggle('cursor-not-allowed', carregando);
+                spinner.classList.toggle('hidden', !carregando);
+                txtSolicitar.textContent = carregando
+                    ? 'Consultando o Bureau de Crédito...'
+                    : 'Solicitar Análise de Crédito';
+            };
+
+            form.addEventListener('submit', async (evento) => {
+                evento.preventDefault();
+                limparErros();
+
+                const dados = Object.fromEntries(new FormData(form).entries());
+
+                // Campos opcionais em branco não são enviados, para não
+                // disparar a validação de formato de e-mail à toa.
+                if (!dados.email) {
+                    delete dados.email;
+                }
+
+                alternarCarregando(true);
+
+                try {
+                    const resposta = await fetch('/api/analise-credito', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Accept: 'application/json',
+                        },
+                        body: JSON.stringify(dados),
+                    });
+
+                    const corpo = await resposta.json().catch(() => ({}));
+
+                    if (resposta.status === 422) {
+                        exibirErrosDeValidacao(corpo.errors ?? {});
+                        return;
+                    }
+
+                    if (!resposta.ok) {
+                        exibirAlerta(
+                            corpo.message ??
+                                'Não foi possível concluir a análise. Tente novamente em instantes.',
+                        );
+                        return;
+                    }
+
+                    exibirResultado(corpo.data);
+                } catch (erro) {
+                    exibirAlerta(
+                        'Falha de comunicação com o servidor. Verifique sua conexão e tente novamente.',
+                    );
+                } finally {
+                    alternarCarregando(false);
+                }
+            });
         });
     </script>
 </body>

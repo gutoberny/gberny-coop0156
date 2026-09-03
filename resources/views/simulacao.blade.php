@@ -173,6 +173,11 @@
                 </div>
             @endif
 
+            <div id="alerta-contratacao" class="hidden bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6 text-left" role="alert" aria-live="assertive">
+                <span class="text-red-400 text-xs block font-semibold uppercase tracking-wider mb-1">Não foi possível concluir</span>
+                <p id="alerta-contratacao-mensagem" class="text-slate-200 text-sm"></p>
+            </div>
+
             <h3 class="text-xl font-semibold text-white mb-2">Confirmar Contratação</h3>
             <p class="text-slate-400 text-sm mb-8 max-w-md mx-auto">
                 Ao confirmar, você está simulando a solicitação formal de contratação deste crédito. Esta ação não pode ser desfeita.
@@ -219,21 +224,80 @@
         <p>&copy; 2026 Coop0156. Desafio Técnico Laravel.</p>
     </footer>
 
-    <!--
-      -- =========================================================================
-      -- INSTRUÇÕES (CANDIDATO): Implemente o JavaScript abaixo.
-      -- =========================================================================
-      -- Ao clicar em "Confirmar Contratação", o candidato deve:
-      --   1. Mostrar o spinner e desabilitar o botão para evitar clique duplo.
-      --   2. Fazer requisição POST para '/api/analise-credito/{{ $analise->id }}/contratar'.
-      --   3. Em caso de sucesso (HTTP 200), exibir o modal de sucesso (#modal-sucesso).
-      --   4. Em caso de erro, exibir uma mensagem de feedback adequada para o usuário.
-      -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const btnConfirmar = document.getElementById('btn-confirmar');
+            const ANALISE_ID = @json($analise->id);
 
-            // TODO: Implementar o clique do botão de confirmação.
+            const el = (id) => document.getElementById(id);
+
+            const btnConfirmar = el('btn-confirmar');
+            const txtConfirmar = el('txt-confirmar');
+            const spinner = el('spinner-confirmar');
+            const modal = el('modal-sucesso');
+            const alerta = el('alerta-contratacao');
+            const alertaMensagem = el('alerta-contratacao-mensagem');
+
+            let emAndamento = false;
+
+            const exibirAlerta = (mensagem) => {
+                alertaMensagem.textContent = mensagem;
+                alerta.classList.remove('hidden');
+            };
+
+            const alternarCarregando = (carregando) => {
+                btnConfirmar.disabled = carregando;
+                btnConfirmar.classList.toggle('opacity-60', carregando);
+                btnConfirmar.classList.toggle('cursor-not-allowed', carregando);
+                spinner.classList.toggle('hidden', !carregando);
+                txtConfirmar.textContent = carregando
+                    ? 'Processando contratação...'
+                    : 'Confirmar Contratação';
+            };
+
+            btnConfirmar.addEventListener('click', async () => {
+                // Guarda contra clique duplo: a contratação não é reversível.
+                if (emAndamento) {
+                    return;
+                }
+
+                emAndamento = true;
+                alerta.classList.add('hidden');
+                alternarCarregando(true);
+
+                try {
+                    const resposta = await fetch(`/api/analise-credito/${ANALISE_ID}/contratar`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Accept: 'application/json',
+                        },
+                    });
+
+                    const corpo = await resposta.json().catch(() => ({}));
+
+                    if (!resposta.ok) {
+                        exibirAlerta(
+                            corpo.message ??
+                                'Não foi possível concluir a contratação. Tente novamente em instantes.',
+                        );
+                        emAndamento = false;
+                        alternarCarregando(false);
+                        return;
+                    }
+
+                    // Sucesso: o botão permanece desabilitado, já que a
+                    // análise saiu do estado contratável.
+                    modal.classList.remove('hidden');
+                    txtConfirmar.textContent = 'Contratação enviada';
+                    spinner.classList.add('hidden');
+                } catch (erro) {
+                    exibirAlerta(
+                        'Falha de comunicação com o servidor. Verifique sua conexão e tente novamente.',
+                    );
+                    emAndamento = false;
+                    alternarCarregando(false);
+                }
+            });
         });
     </script>
 
