@@ -41,13 +41,20 @@ class AnaliseCreditoResource extends JsonResource
 
     /**
      * Total a pagar ao longo das parcelas — só faz sentido quando aprovada.
+     *
+     * Derivado do valor solicitado e da taxa, não da parcela já arredondada,
+     * para bater com o exemplo do enunciado (R$ 10.000 a 2,9% → R$ 13.480,00
+     * e não 12 × R$ 1.123,33 = R$ 13.479,96).
      */
     private function valorTotal(): ?float
     {
-        if ($this->valor_parcela === null) {
+        if ($this->taxa_juros === null) {
             return null;
         }
 
-        return round((float) $this->valor_parcela * PoliticaCredito::PARCELAS, 2);
+        $valorSolicitado = (float) $this->valor_solicitado;
+        $jurosTotais = $valorSolicitado * ((float) $this->taxa_juros / 100) * PoliticaCredito::PARCELAS;
+
+        return round($valorSolicitado + $jurosTotais, 2);
     }
 }

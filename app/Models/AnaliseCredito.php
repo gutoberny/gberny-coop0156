@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Enums\StatusAnalise;
 use App\Enums\TipoCredito;
+use Database\Factories\AnaliseCreditoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AnaliseCredito extends Model
 {
-    /** @use HasFactory<\Database\Factories\AnaliseCreditoFactory> */
+    /** @use HasFactory<AnaliseCreditoFactory> */
     use HasFactory;
 
     protected $table = 'analises_credito';
@@ -55,4 +56,3 @@ class AnaliseCredito extends Model
         return $this->belongsTo(Cliente::class);
     }
 }
-

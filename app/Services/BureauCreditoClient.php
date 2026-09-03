@@ -38,20 +38,28 @@ class BureauCreditoClient
      */
     public function consultarScore(string $cpf): int
     {
+        $url = "{$this->urlBase}/{$cpf}";
+
         try {
             $resposta = Http::timeout($this->timeout)
                 ->acceptJson()
-                ->get("{$this->urlBase}/{$cpf}");
+                ->get($url);
         } catch (ConnectionException $e) {
             // Cobre indisponibilidade e timeout (o mock atrasa 5s para
             // CPFs terminados em 5, acima do timeout configurado).
-            $this->registrarFalha($cpf, 'conexão ou timeout', ['erro' => $e->getMessage()]);
+            $this->registrarFalha($cpf, 'conexão ou timeout', [
+                'url' => $url,
+                'erro' => $e->getMessage(),
+            ]);
 
             throw BureauIndisponivelException::indisponivel($cpf, $e);
         }
 
         if ($resposta->failed()) {
-            $this->registrarFalha($cpf, 'resposta HTTP de erro', ['status' => $resposta->status()]);
+            $this->registrarFalha($cpf, 'resposta HTTP de erro', [
+                'url' => $url,
+                'status' => $resposta->status(),
+            ]);
 
             throw BureauIndisponivelException::respostaInvalida($cpf, $resposta->status());
         }
@@ -59,7 +67,10 @@ class BureauCreditoClient
         $score = $resposta->json('score');
 
         if (! is_numeric($score)) {
-            $this->registrarFalha($cpf, 'payload sem score', ['payload' => $resposta->json()]);
+            $this->registrarFalha($cpf, 'payload sem score', [
+                'url' => $url,
+                'payload' => $resposta->json(),
+            ]);
 
             throw BureauIndisponivelException::scoreAusente($cpf);
         }
